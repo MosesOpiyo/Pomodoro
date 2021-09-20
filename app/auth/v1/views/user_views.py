@@ -1,22 +1,39 @@
-from flask import Flask,jsonify
-from flask_httpauth import HTTPBasicAuth
-from flask import make_response
-from . import app,tasks
-auth = HTTPBasicAuth()
+from app.auth.v1.models.user_models import Users
+from flask import request
+from flask_restful import Resource
+from flask_restful.reqparse import RequestParser
+
+parser = RequestParser()
+
+parser.add_argument("email", type=str, required=True,
+ help="Please input an email")
+parser.add_argument("username", type=str, required=True,
+ help="Please input your name")
 
 
+class User(Resource):
+    """
+    User endpoints
+    """
 
-auth.get_password
-def get_password(username,password):
-    if username == username:
-        return password
-    return None
+    def post(self):
+        """
+        Register a user endpoint
+        """
+        args = parser.parse_args()
+        args = request.get_json()
+        email = args["email"]
+        username = args["username"]
+        password = args["password"]
+        confirm_password = args["confirm_password"]
 
-@auth.error_handler
-def unauthorized():
-    return make_response(jsonify({'error': 'Unauthorized access'}), 401)
+        newUser = Users(username, email, password, confirm_password)
+        newUser.save_user()
 
-@app.route('/todo/api/v1.0/tasks', methods=['GET'])
-@auth.login_required
-def get_tasks():
-    return jsonify({'tasks': tasks})
+        return {
+            "message": "User register successfully",
+            "user" : newUser.__dict__
+        }, 201
+
+    def get(self):
+        pass
